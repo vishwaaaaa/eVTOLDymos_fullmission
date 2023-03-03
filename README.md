@@ -509,7 +509,10 @@ Both can be interrogated with the same path names to find the elements of the ti
 ```
 
 ## Plotting the results
-
+For plotting the results of this optimization use 
+```
+plot_results_copy.py
+```
 The results of the optimization are plotted below.
 The Dymos solution is plotted with blue dots, while the simulated Dymos result is plotted with an orange line.
 The reference solution, where available, is plotted with small black dots.
