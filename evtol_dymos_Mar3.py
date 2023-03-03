@@ -49,7 +49,12 @@ if __name__ == '__main__':
                   'nB': num_blades,  # number of blades per propeller
                   'bc': blade_chord,  # representative blade chord
                   'n_props': num_props  # number of propellers
+                  
                   }
+    #####################################
+    # New input dictionary for descent  #
+    #####################################
+
     # User-specified input dictionary
     input_dict_d = {'T_guess': 9.8 * 725 * 0.9,  # initial thrust guess
                   'x_dot_initial': 67.,  # initial horizontal speed
@@ -67,7 +72,8 @@ if __name__ == '__main__':
                   'rho': 1.225,  # air density
                   'induced_velocity_factor': int(input_arg_1) / 100.,  # induced-velocity factor
                   'stall_option': input_arg_2,  # stall option: 's' allows stall, 'ns' does not
-                  'R': prop_rad,  # propeller radius
+                  'R': prop_rad,  # propeller ra
+    p.set_val('traj.descent.states:x', descent.interpolate(ys=[900, 1800], nodes='state_input'))dius
                   'solidity': num_blades * blade_chord / np.pi / prop_rad,  # solidity
                   'omega': 136. / prop_rad,  # angular rotation rate
                   'prop_CD0': 0.012,  # CD0 for prop profile power
@@ -77,6 +83,9 @@ if __name__ == '__main__':
                   'bc': blade_chord,  # representative blade chord
                   'n_props': num_props  # number of propellers
                   }
+    #####################################
+    #####################################
+
 
     p = om.Problem()
 
@@ -123,12 +132,12 @@ if __name__ == '__main__':
                               ref=100)  # Constraint for the thrust magnitude
 
     #########################################################
-    # Phase-2                                               #
+    # Phase-2     CHANGES MADE                              #
     #########################################################
     descent = dm.Phase(transcription=dm.GaussLobatto(num_segments=10, order=3, solve_segments=False,
                                                    compressed=False),
                      ode_class=Dynamics,
-                     ode_init_kwargs={'input_dict': input_dict_d})  ##the vectorized dynamics
+                     ode_init_kwargs={'input_dict': input_dict_d})  ## The initialization dictionary is changed here.
 
     traj.add_phase('descent', descent)
 
@@ -136,9 +145,9 @@ if __name__ == '__main__':
     duration_ref=100, units='s')
     descent.add_state('x', fix_initial=True, fix_final=False, rate_source='x_dot') #, ref0=0, ref=900, defect_ref=100
     descent.add_state('y', fix_initial=True, fix_final=True, rate_source='y_dot') #, ref0=0, ref=300, defect_ref=300
-    descent.add_state('vx', fix_initial=True, fix_final=True, rate_source='a_x', ref0=0, ref=10)
-    descent.add_state('vy', fix_initial=True, fix_final=True, rate_source='a_y', ref0=0, ref=10)
-    descent.add_state('energy', fix_initial=False, fix_final=False, rate_source='energy_dot', ref0=1900, ref=1E7, defect_ref=1E3)
+    descent.add_state('vx', fix_initial=True, fix_final=True, rate_source='a_x')#, ref0=0, ref=10)
+    descent.add_state('vy', fix_initial=True, fix_final=True, rate_source='a_y')#, ref0=0, ref=10)
+    descent.add_state('energy', fix_initial=False, fix_final=False, rate_source='energy_dot', ref0=1900, ref=1E7, defect_ref=1E3) #ref0 changed to the spend energy in accomplishing the take off 
 
     descent.add_control('power', lower=1e3, upper=311000, ref0=1e3, ref=311000, rate_continuity=False)
     descent.add_control('theta', lower=0., upper=3 * np.pi / 4, ref0=0, ref=3 * np.pi / 4,
@@ -169,6 +178,15 @@ if __name__ == '__main__':
     
     # Objective
     descent.add_objective('energy', loc='final', ref0=0, ref=1E7)
+
+    #########################################
+    #########################################
+
+
+
+
+
+
     # # Setup the driver
     p.driver = om.pyOptSparseDriver()
 
@@ -207,14 +225,20 @@ if __name__ == '__main__':
 
     p.set_val('traj.ascent.controls:power', 200000.0)
     p.set_val('traj.ascent.controls:theta', ascent.interpolate(ys=[0.001, np.radians(85)], nodes='control_input'))
-    # Set Initial Values for descent Phase
-    p.set_val('traj.descent.t_initial', 30.0)
-    p.set_val('traj.descent.t_duration', 30)
-    p.set_val('traj.descent.states:x', descent.interpolate(ys=[900, 1800], nodes='state_input'))
-    p.set_val('traj.descent.states:y', descent.interpolate(ys=[300, 0.01], nodes='state_input'))
-    p.set_val('traj.descent.states:vx', descent.interpolate(ys=[60, 0], nodes='state_input'))
-    p.set_val('traj.descent.states:vy', descent.interpolate(ys=[10, 0.01], nodes='state_input'))
-    p.set_val('traj.descent.states:energy', descent.interpolate(ys=[1E7, 0 ], nodes='state_input'))
+
+
+    ##################
+    # CHANGES MADE   #
+    ##################
+
+    # Set Initial Values for descent Phase 
+    p.set_val('traj.descent.t_initial', 30.0) # initial time is set to the end of the ascent phase
+    p.set_val('traj.descent.t_duration', 30) #the duration is set to 30s
+    p.set_val('traj.descent.states:x', descent.interpolate(ys=[900, 1800], nodes='state_input')) # the descent trajectory interpolated in x
+    p.set_val('traj.descent.states:y', descent.interpolate(ys=[300, 0.01], nodes='state_input')) # the descent trajectory interpolated in y
+    p.set_val('traj.descent.states:vx', descent.interpolate(ys=[60, 0], nodes='state_input')) # The x direction velocity interpolation
+    p.set_val('traj.descent.states:vy', descent.interpolate(ys=[10, 0.01], nodes='state_input')) # the y direction velocity interpolation
+    p.set_val('traj.descent.states:energy', descent.interpolate(ys=[1E7, 0 ], nodes='state_input')) # the engery used
 
     p.set_val('traj.descent.controls:power', descent.interpolate(xs=np.linspace(28.368, 2*28.368, 500),
                                                               ys=verify_data.powers.ravel(),
@@ -224,6 +248,6 @@ if __name__ == '__main__':
                                                               nodes='control_input'))
 
     p.set_val('traj.descent.controls:power', 200000.0)
-    p.set_val('traj.descent.controls:theta', descent.interpolate(ys=[0.001,-np.radians(85) ], nodes='control_input'))
+    p.set_val('traj.descent.controls:theta', descent.interpolate(ys=[0.001,-np.radians(85) ], nodes='control_input')) # the control theta 
 
     dm.run_problem(p, run_driver=True, simulate=True)
