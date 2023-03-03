@@ -525,7 +525,7 @@ A downside of the Dymos approach is that, by riding the constraint so tightly, t
 We can see this in the acceleration limit, where there is some overshooting of the acceleration in the middle of the trajectory.
 In practice, if we want to mitigate this, we can add more segments or higher-order segments to the problem to increase the density of the nodes where the path constraint is enforced.
 
-![Dymos eVTOL Optimization Results](results.png)
+![Dymos eVTOL Optimization Results](Mar3.png)
 
 
 ## Responses to original questions from the submission
