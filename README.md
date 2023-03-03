@@ -1,6 +1,6 @@
 # The Dymos implementation of the eVTOL full mission(currently attempting descent)
 
-The script to actually optimize the eVTOL using Dymos and OpenMDAO is available in `evtol_dymos_vectorized.py`.
+The script to actually optimize the eVTOL using Dymos and OpenMDAO is available in `evtol_dymos_Mar3.py`.
 We'll go through the run script and explain how the problem is setup.
 
 ## Front matter
