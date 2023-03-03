@@ -1,4 +1,4 @@
-# The Dymos implementation of the eVTOL
+# The Dymos implementation of the eVTOL full mission(currently attempting descent)
 
 The script to actually optimize the eVTOL using Dymos and OpenMDAO is available in `evtol_dymos_vectorized.py`.
 We'll go through the run script and explain how the problem is setup.
