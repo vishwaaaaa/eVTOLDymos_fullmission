@@ -330,7 +330,7 @@ Unfortunately, it's just far more capable.
 
 Development of high-quality, sparse-aware optimizers takes years of work.
 Of the options freely available, IPOPT tends to be nearly on par with SNOPT for use in Dymos.
-For this particular problem it settles in around the same objective (6.68E-1).
+For this particular problem it settles in around the same objective (7.896831E-01).
 Loosening the convergence tolerance a bit makes it converge fairly quickly.
 The settings tried for IPOPT are included below, but commented out, for users who would like to experiment with it.
 
