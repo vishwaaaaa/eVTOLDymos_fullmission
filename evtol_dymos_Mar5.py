@@ -73,7 +73,7 @@ if __name__ == '__main__':
                   'induced_velocity_factor': int(input_arg_1) / 100.,  # induced-velocity factor
                   'stall_option': input_arg_2,  # stall option: 's' allows stall, 'ns' does not
                   'R': prop_rad,  # propeller ra
-    
+
                   'solidity': num_blades * blade_chord / np.pi / prop_rad,  # solidity
                   'omega': 136. / prop_rad,  # angular rotation rate
                   'prop_CD0': 0.012,  # CD0 for prop profile power
@@ -102,7 +102,7 @@ if __name__ == '__main__':
     traj.add_phase('ascent', ascent)
 
     ascent.set_time_options(fix_initial=True, duration_bounds=(5, 60), duration_ref=30)
-    ascent.add_state('x', fix_initial=True, rate_source='x_dot', ref0=0, ref=1400, defect_ref=100)
+    ascent.add_state('x', fix_initial=True, rate_source='x_dot', ref0=0, ref=900, defect_ref=100)
     ascent.add_state('y', fix_initial=True, rate_source='y_dot', ref0=0, ref=300, defect_ref=300)
     ascent.add_state('vx', fix_initial=True, rate_source='a_x', ref0=0, ref=10)
     ascent.add_state('vy', fix_initial=True, rate_source='a_y', ref0=0, ref=10)
@@ -131,53 +131,53 @@ if __name__ == '__main__':
     ascent.add_path_constraint('thrust', lower=10, ref0=10,
                               ref=100)  # Constraint for the thrust magnitude
 
-    # #########################################################
-    # # Phase-2     CHANGES MADE                              #
-    # #########################################################
-    # descent = dm.Phase(transcription=dm.GaussLobatto(num_segments=10, order=3, solve_segments=False,
-    #                                                compressed=False),
-    #                  ode_class=Dynamics,
-    #                  ode_init_kwargs={'input_dict': input_dict_d})  ## The initialization dictionary is changed here.
+    #########################################################
+    # Phase-2     CHANGES MADE                              #
+    #########################################################
+    descent = dm.Phase(transcription=dm.GaussLobatto(num_segments=10, order=3, solve_segments=False,
+                                                   compressed=False),
+                     ode_class=Dynamics,
+                     ode_init_kwargs={'input_dict': input_dict_d})  ## The initialization dictionary is changed here.
 
-    # traj.add_phase('descent', descent)
+    traj.add_phase('descent', descent)
 
-    # descent.set_time_options(initial_bounds=(.5, 100), duration_bounds=(.5, 100),
-    # duration_ref=100, units='s')
-    # descent.add_state('x', fix_initial=True, fix_final=False, rate_source='x_dot') #, ref0=0, ref=900, defect_ref=100
-    # descent.add_state('y', fix_initial=True, fix_final=True, rate_source='y_dot') #, ref0=0, ref=300, defect_ref=300
-    # descent.add_state('vx', fix_initial=True, fix_final=True, rate_source='a_x')#, ref0=0, ref=10)
-    # descent.add_state('vy', fix_initial=True, fix_final=True, rate_source='a_y')#, ref0=0, ref=10)
-    # descent.add_state('energy', fix_initial=False, fix_final=False, rate_source='energy_dot', ref0=1900, ref=1E7, defect_ref=1E3) #ref0 changed to the spend energy in accomplishing the take off 
+    descent.set_time_options(initial_bounds=(.5, 100), duration_bounds=(.5, 100),
+    duration_ref=100, units='s')
+    descent.add_state('x', fix_initial=True, fix_final=False, rate_source='x_dot') #, ref0=0, ref=900, defect_ref=100
+    descent.add_state('y', fix_initial=True, fix_final=True, rate_source='y_dot') #, ref0=0, ref=300, defect_ref=300
+    descent.add_state('vx', fix_initial=True, fix_final=True, rate_source='a_x')#, ref0=0, ref=10)
+    descent.add_state('vy', fix_initial=True, fix_final=True, rate_source='a_y')#, ref0=0, ref=10)
+    descent.add_state('energy', fix_initial=False, fix_final=False, rate_source='energy_dot', ref0=1900, ref=1E7, defect_ref=1E3) #ref0 changed to the spend energy in accomplishing the take off 
 
-    # descent.add_control('power', lower=1e3, upper=311000, ref0=1e3, ref=311000, rate_continuity=False)
-    # descent.add_control('theta', lower=0., upper=3 * np.pi / 4, ref0=0, ref=3 * np.pi / 4,
-    #                   rate_continuity=False)
+    descent.add_control('power', lower=1e3, upper=311000, ref0=1e3, ref=311000, rate_continuity=False)
+    descent.add_control('theta', lower=0., upper=3 * np.pi / 4, ref0=0, ref=3 * np.pi / 4,
+                      rate_continuity=False)
 
-    # descent.add_timeseries_output(['CL', 'CD'])
-    # # Link Phases (link time and all state variables)
-    # traj.link_phases(phases=['ascent', 'descent'], vars=['*'])
+    descent.add_timeseries_output(['CL', 'CD'])
+    # Link Phases (link time and all state variables)
+    traj.link_phases(phases=['ascent', 'descent'], vars=['*'])
     
 
-    # # Boundary Constraints
-    # descent.add_boundary_constraint('y', loc='final', lower=1,
-    #                               ref=100)  # Constraint for the final vertical displacement
-    # descent.add_boundary_constraint('x', loc='final', equals=1800,
-    #                               ref=100)  # Constraint for the final horizontal displacement
-    # descent.add_boundary_constraint('x_dot', loc='final', equals=1.,
-    #                               ref=100)  # Constraint for the final horizontal speed
+    # Boundary Constraints
+    descent.add_boundary_constraint('y', loc='final', lower=1,
+                                  ref=100)  # Constraint for the final vertical displacement
+    descent.add_boundary_constraint('x', loc='final', equals=1800,
+                                  ref=100)  # Constraint for the final horizontal displacement
+    descent.add_boundary_constraint('x_dot', loc='final', equals=1.,
+                                  ref=100)  # Constraint for the final horizontal speed
 
-    # # Path Constraints
-    # descent.add_path_constraint('y', lower=0.1, upper=305,
-    #                           ref=300)  # Constraint for the minimum vertical displacement
-    # descent.add_path_constraint('acc', upper=0.01,
-    #                           ref=1.0)  # Constraint for the acceleration magnitude
-    # descent.add_path_constraint('aoa', lower=-np.radians(15), upper=np.radians(15), ref0=-np.radians(15),
-    #                           ref=np.radians(15))  # Constraint for the angle of attack
-    # descent.add_path_constraint('thrust', lower=-10, ref0=10,
-    #                           ref=100)  # Constraint for the thrust magnitude
+    # Path Constraints
+    descent.add_path_constraint('y', lower=0.1, upper=305,
+                              ref=300)  # Constraint for the minimum vertical displacement
+    descent.add_path_constraint('acc', upper=-0.01,
+                              ref=1.0)  # Constraint for the acceleration magnitude
+    descent.add_path_constraint('aoa', lower=-np.radians(15), upper=np.radians(15), ref0=-np.radians(15),
+                              ref=np.radians(15))  # Constraint for the angle of attack
+    descent.add_path_constraint('thrust', lower=-10, ref0=10,
+                              ref=100)  # Constraint for the thrust magnitude
     
     # Objective
-    ascent.add_objective('energy', loc='final', ref0=0, ref=1E7)
+    descent.add_objective('energy', loc='final', ref0=0, ref=1E7)
 
     #########################################
     #########################################
@@ -205,7 +205,7 @@ if __name__ == '__main__':
     p.driver.opt_settings['tol'] = 5.0E-5
 
     p.driver.declare_coloring(tol=1.0E-8)
-    
+
     p.setup()
     # Set Initial Values for ascent Phase
     p.set_val('traj.ascent.t_initial', 0.0)
@@ -231,23 +231,23 @@ if __name__ == '__main__':
     # CHANGES MADE   #
     ##################
 
-    # # Set Initial Values for descent Phase 
-    # p.set_val('traj.descent.t_initial', 30.0) # initial time is set to the end of the ascent phase
-    # p.set_val('traj.descent.t_duration', 30) #the duration is set to 30s
-    # p.set_val('traj.descent.states:x', descent.interpolate(ys=[900, 1800], nodes='state_input')) # the descent trajectory interpolated in x
-    # p.set_val('traj.descent.states:y', descent.interpolate(ys=[300, 0.01], nodes='state_input')) # the descent trajectory interpolated in y
-    # p.set_val('traj.descent.states:vx', descent.interpolate(ys=[60, 0], nodes='state_input')) # The x direction velocity interpolation
-    # p.set_val('traj.descent.states:vy', descent.interpolate(ys=[10, 0.01], nodes='state_input')) # the y direction velocity interpolation
-    # p.set_val('traj.descent.states:energy', descent.interpolate(ys=[1E7, 0 ], nodes='state_input')) # the engery used
+    # Set Initial Values for descent Phase 
+    p.set_val('traj.descent.t_initial', 30.0) # initial time is set to the end of the ascent phase
+    p.set_val('traj.descent.t_duration', 30) #the duration is set to 30s
+    p.set_val('traj.descent.states:x', descent.interpolate(ys=[900, 1800], nodes='state_input')) # the descent trajectory interpolated in x
+    p.set_val('traj.descent.states:y', descent.interpolate(ys=[300, 0.01], nodes='state_input')) # the descent trajectory interpolated in y
+    p.set_val('traj.descent.states:vx', descent.interpolate(ys=[60, 0], nodes='state_input')) # The x direction velocity interpolation
+    p.set_val('traj.descent.states:vy', descent.interpolate(ys=[10, 0.01], nodes='state_input')) # the y direction velocity interpolation
+    p.set_val('traj.descent.states:energy', descent.interpolate(ys=[1E7, 0 ], nodes='state_input')) # the engery used
 
-    # p.set_val('traj.descent.controls:power', descent.interpolate(xs=np.linspace(28.368, 2*28.368, 500),
-    #                                                           ys=verify_data.powers.ravel(),
-    #                                                           nodes='control_input'))
-    # p.set_val('traj.descent.controls:theta', descent.interpolate(xs=np.linspace(28.368, 2*28.368, 500),
-    #                                                           ys=verify_data.thetas.ravel(),
-    #                                                           nodes='control_input'))
+    p.set_val('traj.descent.controls:power', descent.interpolate(xs=np.linspace(28.368, 2*28.368, 500),
+                                                              ys=verify_data.powers.ravel(),
+                                                              nodes='control_input'))
+    p.set_val('traj.descent.controls:theta', descent.interpolate(xs=np.linspace(28.368, 2*28.368, 500),
+                                                              ys=verify_data.thetas.ravel(),
+                                                              nodes='control_input'))
 
-    # p.set_val('traj.descent.controls:power', 200000.0)
-    # p.set_val('traj.descent.controls:theta', descent.interpolate(ys=[0.001,-np.radians(85) ], nodes='control_input')) # the control theta 
+    p.set_val('traj.descent.controls:power', 200000.0)
+    p.set_val('traj.descent.controls:theta', descent.interpolate(ys=[0.001,-np.radians(85) ], nodes='control_input')) # the control theta 
 
     dm.run_problem(p, run_driver=True, simulate=True)
